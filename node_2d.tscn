@@ -1,12 +1,23 @@
 [gd_scene format=3 uid="uid://ccihw4d64k6i8"]
 
-[ext_resource type="Script" uid="uid://ddcshtcmu0fv2" path="res://player.gd" id="1_0e48y"]
-[ext_resource type="Texture2D" uid="uid://wu6p361ym2jm" path="res://Resume.png" id="2_epypp"]
+[ext_resource type="Script" uid="uid://euxdjf78qvdd" path="res://player.gd" id="1_0e48y"]
+[ext_resource type="Script" uid="uid://bi3f8onae6mxe" path="res://game.gd" id="1_q6r6c"]
+[ext_resource type="Texture2D" uid="uid://cw4equvmcct3k" path="res://Resume.png" id="2_epypp"]
+[ext_resource type="Texture2D" uid="uid://1b7s1wqcxvc" path="res://bg.png" id="2_kdubu"]
+[ext_resource type="PackedScene" uid="uid://b4v2etk3qvqyw" path="res://player.tscn" id="3_epypp"]
+[ext_resource type="Script" uid="uid://b82kletrenrni" path="res://ball.gd" id="4_0hol4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_utm2n"]
 size = Vector2(30, 150)
 
 [node name="Node2D" type="Node2D" unique_id=627393634]
+script = ExtResource("1_q6r6c")
+background_image = ExtResource("2_kdubu")
+
+[node name="Bg" type="Sprite2D" parent="." unique_id=224959401]
+position = Vector2(576.49994, 324.00003)
+scale = Vector2(7.1937513, 7.2)
+texture = ExtResource("2_kdubu")
 
 [node name="player" type="CharacterBody2D" parent="." unique_id=1873496092]
 position = Vector2(60, 324)
@@ -18,3 +29,10 @@ texture = ExtResource("2_epypp")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="player" unique_id=1484725846]
 shape = SubResource("RectangleShape2D_utm2n")
+
+[node name="CpuPaddle" parent="." unique_id=691133091 instance=ExtResource("3_epypp")]
+side = 1
+is_cpu = true
+
+[node name="Ball" type="CharacterBody2D" parent="." unique_id=214991094]
+script = ExtResource("4_0hol4")
