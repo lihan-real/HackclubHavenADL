@@ -9,6 +9,7 @@ signal exited(side: int)
 @export var max_speed: float = 1100.0
 @export var trail_color: Color = Color(1, 1, 1, 0.35)
 
+var hit_cooldown: float = 0.0
 var speed: float = 0.0
 var direction: Vector2 = Vector2.ZERO
 var waiting: bool = false
@@ -62,18 +63,29 @@ func _physics_process(delta: float) -> void:
 	if waiting:
 		return
 
+	hit_cooldown = maxf(hit_cooldown - delta, 0.0)
+
 	var hit_info = move_and_collide(direction * speed * delta)
 	if hit_info:
 		var other = hit_info.get_collider()
+		var normal = hit_info.get_normal()
 		if other.has_method("hit"):
-			other.hit()
-			var offset = (global_position.y - other.global_position.y) / (other.paddle_size.y / 2)
-			offset = clamp(offset, -1.0, 1.0)
-			var x_dir = -sign(direction.x)
-			direction = Vector2(x_dir, offset * 0.75).normalized()
-			speed = min(speed + speed_increase, max_speed)
+			if absf(normal.x) > absf(normal.y):
+				# front face of the paddle: always send the ball AWAY from it
+				var x_dir = 1.0 if normal.x > 0.0 else -1.0
+				var offset = (global_position.y - other.global_position.y) / (other.paddle_size.y / 2)
+				offset = clamp(offset, -1.0, 1.0)
+				direction = Vector2(x_dir, offset * 0.75).normalized()
+				if hit_cooldown <= 0.0:
+					other.hit()
+					speed = min(speed + speed_increase, max_speed)
+					hit_cooldown = 0.1
+			else:
+				# top or bottom edge of the paddle: just deflect, don't flip x
+				direction = direction.bounce(normal).normalized()
+				global_position += normal * 2.0
 		else:
-			direction = direction.bounce(hit_info.get_normal())
+			direction = direction.bounce(normal)
 
 	var size = get_viewport_rect().size
 	if global_position.y < radius:

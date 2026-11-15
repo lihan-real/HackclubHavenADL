@@ -45,7 +45,8 @@ class ForceField extends AnimatableBody2D:
 @export var max_lives: int = 3
 @export var time_stop_length: float = 3.0
 @export var background_image: Texture2D
-
+@export var music_stream: AudioStream
+@export_range(-40.0, 6.0) var music_volume_db: float = -8.0
 var player
 var cpu
 var ball
@@ -72,6 +73,7 @@ var stop_label: Label
 var stop_overlay: ColorRect
 var message_tween: Tween
 var choice_panel: Control
+var music_player: AudioStreamPlayer
 var choice_title: Label
 var choice_row: HBoxContainer
 var restart_button: Button
@@ -91,6 +93,7 @@ func _ready() -> void:
 		return
 	lives = max_lives
 	ball.exited.connect(on_ball_exited)
+	build_music()
 	build_ui()
 	start_round()
 
@@ -107,6 +110,22 @@ func build_background() -> void:
 	bg.size = get_viewport_rect().size
 	layer.add_child(bg)
 	
+func build_music() -> void:
+	var stream = music_stream
+	if stream == null and ResourceLoader.exists("res://hackclub haven.mp3"):
+		stream = load("res://hackclub haven.mp3")
+	if stream == null:
+		push_warning("No music assigned. Set Music Stream on the main node.")
+		return
+	if stream is AudioStreamMP3:
+		stream.loop = false
+	music_player = AudioStreamPlayer.new()
+	music_player.stream = stream
+	music_player.volume_db = music_volume_db
+	music_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(music_player)
+	music_player.finished.connect(func(): music_player.play())
+	music_player.play()
 	
 func make_label(parent: Node, font_size: int, pos: Vector2, label_size: Vector2, align: HorizontalAlignment) -> Label:
 	var label = Label.new()
@@ -380,8 +399,8 @@ func set_frozen(frozen: bool) -> void:
 
 
 func _process(delta: float) -> void:
+	if music_player != null and not music_player.playing:
+		music_player.play()
 	if time_stop_left > 0.0:
 		time_stop_left -= delta
 		stop_label.text = "TIME STOPPED  %.1f" % maxf(time_stop_left, 0.0)
-		if time_stop_left <= 0.0:
-			end_time_stop()
